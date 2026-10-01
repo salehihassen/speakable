@@ -1,0 +1,31 @@
+llm:
+  enabled: true
+  base_url: http://ai-policy-proxy:18443/v1
+  model: ai-policy/public
+  api_key_file: /run/secrets/speakable_cpa_key
+  timeout_seconds: 90
+  max_input_characters: 40000
+  fallback: convert
+
+conversion:
+  # 256 KiB on the wire and 160k text characters: generously sized while
+  # remaining below roughly 100 typical book pages.
+  max_body_bytes: 262144
+  max_request_characters: 160000
+  citation_headings: [sources, references, citations]
+  symbol_map:
+    "➡️": " to "
+    "→": " to "
+    "➔": " to "
+    "➜": " to "
+    "➡": " to "
+    "⟶": " to "
+    "↦": " to "
+    "<->": " maps to "
+    "↔": " maps to "
+    "⟷": " maps to "
+    "->": " to "
+    "⇒": " implies "
+    "⟹": " implies "
+    "=>": " implies "
+    "&": " and "

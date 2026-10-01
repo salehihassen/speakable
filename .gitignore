@@ -1,0 +1,23 @@
+.pytest_cache/
+.venv/
+__pycache__/
+*.pyc
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+config.yaml
+secrets/
+*.key
+*.pem
+
+# Test and tooling output
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
