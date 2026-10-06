@@ -120,12 +120,16 @@ def _parse_llm_json(content: str) -> dict:
     return parsed
 
 
-def _local_markdown_to_text(text: str, symbol_map: dict[str, str]) -> str:
+def _local_markdown_to_text(
+    text: str, symbol_map: dict[str, str], remove_patterns: list[str]
+) -> str:
     # Footnotes, numeric citation markers, and raw citation URLs.
     text = re.sub(r"(?m)^[ \t]*\[[^\]]+\]:[ \t]+\S+.*$", "", text)
     text = re.sub(r"(?<!\w)\[(?:\d+(?:\s*[,;-]\s*\d+)*)\]", "", text)
     text = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text)
     text = re.sub(r"https?://\S+", "", text)
+    for pattern in remove_patterns:
+        text = re.sub(pattern, "", text)
     text = re.sub(r"(?m)^[ \t]{0,3}#{1,6}[ \t]*", "", text)
     text = re.sub(r"(?m)^[ \t]*>[ \t]?", "", text)
     text = re.sub(r"(?m)^[ \t]*(?:[-+*]|\d+[.)])[ \t]+", "", text)
@@ -134,6 +138,9 @@ def _local_markdown_to_text(text: str, symbol_map: dict[str, str]) -> str:
     for symbol in sorted(symbol_map, key=len, reverse=True):
         text = text.replace(symbol, symbol_map[symbol])
     text = re.sub(r"[ \t]+", " ", text)
+    # Removals can strand punctuation, as in "edit  ." or "see ( )".
+    text = re.sub(r"\([ \t]*\)", "", text)
+    text = re.sub(r"[ \t]+([,.;:!?])", r"\1", text)
     # Trim horizontal whitespace at line edges without consuming blank lines;
     # those paragraph and passage boundaries are useful in both the UI and TTS.
     text = re.sub(r"[ \t]*\n[ \t]*", "\n", text)
@@ -209,7 +216,9 @@ async def convert(source: str, config: AppConfig, use_llm: bool = True) -> Conve
         replacement = replacements.get(block.id, _fallback(block, config.llm.fallback))
         template = template.replace(block.id, replacement)
     return ConversionResult(
-        text=_local_markdown_to_text(template, config.conversion.symbol_map),
+        text=_local_markdown_to_text(
+            template, config.conversion.symbol_map, config.conversion.remove_patterns
+        ),
         used_llm=used_llm,
         block_count=len(blocks),
         warnings=tuple(warnings),

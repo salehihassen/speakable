@@ -13,6 +13,8 @@ conversion:
   max_body_bytes: 262144
   max_request_characters: 160000
   citation_headings: [sources, references, citations]
+  # remove_patterns: regexes deleted from the output. Omit to use the built-in
+  # file-path patterns; set a list to replace them, or [] to disable removal.
   symbol_map:
     "➡️": " to "
     "→": " to "

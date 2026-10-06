@@ -80,7 +80,10 @@ warnings. Interactive API documentation is available at `/docs`.
 ## Configuration
 
 Copy `config.example.yaml` to the runtime configuration location. `symbol_map`
-is applied longest-key-first. The LLM key is read from a mounted secret file,
+is applied longest-key-first. `remove_patterns` is a list of regexes deleted
+from the text; the defaults remove file names with common extensions, explicit
+`/`, `./`, `../` and `~/` paths, and inline code containing a slash. Setting it
+replaces the defaults, and an empty list disables removal. The LLM key is read from a mounted secret file,
 never from YAML. If inference fails, `fallback: convert` turns tables into
 simple row prose and replaces code with a spoken omission; `drop` removes both
 kinds of block.

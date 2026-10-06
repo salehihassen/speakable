@@ -81,3 +81,15 @@ async def test_unicode_arrows_are_spoken_in_both_modes(config: AppConfig, use_ll
     assert result.text == (
         "consulting to repeated customer pain to reusable solution to product"
     )
+
+
+@pytest.mark.asyncio
+async def test_removes_file_mentions(config: AppConfig):
+    source = """I updated `src/speakable/converter.py:42` and config.yaml.
+Logs live in /var/log/app (~/notes/todo.md), and `scripts/run` was unchanged.
+Use it for input and/or output, 24/7, e.g. on Node."""
+    result = await convert(source, config)
+    assert result.text == (
+        "I updated and.\nLogs live in, and was unchanged.\n"
+        "Use it for input and/or output, 24/7, e.g. on Node."
+    )
