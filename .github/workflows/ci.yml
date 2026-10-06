@@ -38,3 +38,37 @@ jobs:
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    # Only after tests and the secret scan pass, and only for main (never PRs).
+    needs: [test, secret-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    # A newer push cancels an older publish, so latest always ends on the newest commit.
+    concurrency:
+      group: publish-main
+      cancel-in-progress: true
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Log in to GHCR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and push latest and sha- tags
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          image="ghcr.io/${REPOSITORY,,}"
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/${REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --tag "${image}:sha-${GITHUB_SHA::7}" \
+            --tag "${image}:latest" .
+          docker push "${image}:sha-${GITHUB_SHA::7}"
+          docker push "${image}:latest"
